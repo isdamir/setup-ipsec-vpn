@@ -330,19 +330,21 @@ EOF
 
 # Set xl2tpd options
 conf_bk "/etc/ppp/options.xl2tpd"
-cat > /etc/ppp/options.xl2tpd <<EOF
-+mschap-v2
+cat > /etc/ppp/options.xl2tpd<<EOF
 ipcp-accept-local
 ipcp-accept-remote
+require-mschap-v2
 ms-dns $DNS_SRV1
 ms-dns $DNS_SRV2
 noccp
 auth
+hide-password
+idle 1800
 mtu 1280
 mru 1280
+nodefaultroute
+debug
 proxyarp
-lcp-echo-failure 4
-lcp-echo-interval 30
 connect-delay 5000
 EOF
 
