@@ -326,6 +326,7 @@ require authentication = yes
 name = l2tpd
 pppoptfile = /etc/ppp/options.xl2tpd
 length bit = yes
+ppp debug = yes
 EOF
 
 # Set xl2tpd options
