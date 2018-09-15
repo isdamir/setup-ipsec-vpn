@@ -259,8 +259,8 @@ conn shared
   dpddelay=30
   dpdtimeout=120
   dpdaction=clear
-  #ike=3des-sha1,3des-sha2,aes-sha1,aes-sha1;modp1024,aes-sha2,aes-sha2;modp1024
-  #phase2alg=3des-sha1,3des-sha2,aes-sha1,aes-sha2,aes256-sha2_512
+  ike=3des-sha1,3des-sha2,aes-sha1,aes-sha1;modp1024,aes-sha2,aes-sha2;modp1024
+  phase2alg=3des-sha1,3des-sha2,aes-sha1,aes-sha2,aes256-sha2_512
   sha2-truncbug=yes
 
 conn l2tp-psk
@@ -326,26 +326,23 @@ require authentication = yes
 name = l2tpd
 pppoptfile = /etc/ppp/options.xl2tpd
 length bit = yes
-ppp debug = yes
 EOF
 
 # Set xl2tpd options
 conf_bk "/etc/ppp/options.xl2tpd"
 cat > /etc/ppp/options.xl2tpd <<EOF
++mschap-v2
 ipcp-accept-local
 ipcp-accept-remote
-require-mschap-v2
 ms-dns $DNS_SRV1
 ms-dns $DNS_SRV2
 noccp
 auth
-hide-password
-idle 1800
 mtu 1280
 mru 1280
-nodefaultroute
-debug
 proxyarp
+lcp-echo-failure 4
+lcp-echo-interval 30
 connect-delay 5000
 EOF
 
@@ -414,13 +411,13 @@ fi
 if [ "$ipt_flag" = "1" ]; then
   service fail2ban stop >/dev/null 2>&1
   iptables-save > "$IPT_FILE.old-$SYS_DT"
-  iptables -I INPUT 1 -p udp --dport 1701 -m policy --dir in --pol none -j DROP
-  iptables -I INPUT 2 -m conntrack --ctstate INVALID -j DROP
+  # iptables -I INPUT 1 -p udp --dport 1701 -m policy --dir in --pol none -j DROP
+  # iptables -I INPUT 2 -m conntrack --ctstate INVALID -j DROP
   iptables -I INPUT 3 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
   iptables -I INPUT 4 -p udp -m multiport --dports 500,4500 -j ACCEPT
   iptables -I INPUT 5 -p udp --dport 1701 -m policy --dir in --pol ipsec -j ACCEPT
-  iptables -I INPUT 6 -p udp --dport 1701 -j DROP
-  iptables -I FORWARD 1 -m conntrack --ctstate INVALID -j DROP
+  # iptables -I INPUT 6 -p udp --dport 1701 -j DROP
+  # iptables -I FORWARD 1 -m conntrack --ctstate INVALID -j DROP
   iptables -I FORWARD 2 -i "$net_iface" -o ppp+ -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
   iptables -I FORWARD 3 -i ppp+ -o "$net_iface" -j ACCEPT
   iptables -I FORWARD 4 -i ppp+ -o ppp+ -s "$L2TP_NET" -d "$L2TP_NET" -j ACCEPT
@@ -429,7 +426,7 @@ if [ "$ipt_flag" = "1" ]; then
   # Uncomment if you wish to disallow traffic between VPN clients themselves
   # iptables -I FORWARD 2 -i ppp+ -o ppp+ -s "$L2TP_NET" -d "$L2TP_NET" -j DROP
   # iptables -I FORWARD 3 -s "$XAUTH_NET" -d "$XAUTH_NET" -j DROP
-  iptables -A FORWARD -j DROP
+  # iptables -A FORWARD -j DROP
   iptables -t nat -I POSTROUTING -s "$XAUTH_NET" -o "$net_iface" -m policy --dir out --pol none -j MASQUERADE
   iptables -t nat -I POSTROUTING -s "$L2TP_NET" -o "$net_iface" -j MASQUERADE
   echo "# Modified by hwdsl2 VPN script" > "$IPT_FILE"
